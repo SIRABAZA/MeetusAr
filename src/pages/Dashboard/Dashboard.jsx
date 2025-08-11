@@ -1,33 +1,39 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogOut, User, Key } from "lucide-react";
-import { logoutUser, checkAuthStatus } from "@/store/authSlice";
+import { logoutUser, checkAuth } from "@/store/authSlice";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { user, token, loading, error } = useSelector((state) => state.auth);
 
-  // Check authentication status on component mount
+  const isAuthenticated = !!user && !!token;
+
   useEffect(() => {
     if (!isAuthenticated) {
-      dispatch(checkAuthStatus());
+      dispatch(checkAuth());
     }
   }, [dispatch, isAuthenticated]);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      navigate("/login");
+      navigate("/");
     }
   }, [isAuthenticated, loading, navigate]);
 
   const handleLogout = async () => {
-    await dispatch(logoutUser());
-    navigate("/login");
+    try {
+      await dispatch(logoutUser());
+      toast.success("Logged out successfully! Redirecting to login...");
+      navigate("/");
+    } catch (err) {
+      toast.error("Logout failed. Please try again.");
+    }
   };
 
   if (loading) {
@@ -48,7 +54,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Welcome to Dashboard
@@ -58,9 +63,8 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* User Info Card */}
         <Card className="mb-8 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+          <CardHeader className="bg-white">
             <CardTitle className="flex items-center gap-2">
               <User className="h-6 w-6" />
               User Information
@@ -93,7 +97,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Actions Card */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-gray-800">Actions</CardTitle>
@@ -114,7 +117,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Footer */}
         <div className="text-center mt-8 text-gray-500">
           <p>© 2024 MeetUs VR. All rights reserved.</p>
         </div>
